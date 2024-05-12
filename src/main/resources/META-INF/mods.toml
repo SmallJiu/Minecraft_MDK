@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[36,)"
+license="GNU AGPL 3.0 license"
+[[mods]]
+modId="examplemod"
+version="1.0.0"
+displayName="ExampleMod"
+logoFile="logo.png"
+credits=""
+authors=""
+description='''
+a example mod
+'''
+[[dependencies.examplemod]]
+    modId="forge"
+    mandatory=true
+    versionRange="[36,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.examplemod]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.16.5,1.17)"
+    ordering="NONE"
+    side="BOTH"
