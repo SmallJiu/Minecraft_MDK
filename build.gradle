@@ -1,3 +1,7 @@
+import org.apache.commons.io.FileUtils
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+
 plugins {
     id 'eclipse'
     id 'idea'
@@ -101,7 +105,9 @@ dependencies {
 }
 
 
+File archiveFile1
 tasks.named('jar', Jar).configure {
+    Date date = new Date()
     manifest {
         attributes([
                 'Specification-Title'     : mod_name,
@@ -110,10 +116,67 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                'Implementation-Timestamp': date.format("yyyy/MM/dd_HH:mm:ss")
         ])
     }
     finalizedBy 'reobfJar'
+
+    String date1 = "_" + date.format("HH.mm.ss")
+    String name = archiveFileName.get()
+
+    name = name.substring(0, name.lastIndexOf('.')) + date1
+
+    archiveFileName.set(name + ".jar")
+
+    doLast {
+        archiveFile1 = archiveFile.get().getAsFile()
+    }
+}
+
+build {
+    doLast {
+        File root = archiveFile1.getParentFile().getParentFile().getParentFile()
+        File tempDir = new File(root, "build/tmp/source/")
+        String name = archiveFile1.getName().substring(0, archiveFile1.getName().lastIndexOf('.'))
+        File sourceJar = new File(archiveFile1.getParent(), name + "-source.jar")
+        println()
+        println("file name: " + archiveFile1.getName())
+        println("source name: " + name + "-source.jar")
+        if (tempDir.exists()) {
+            tempDir.delete()
+        }
+        copy(new File(root, "build/resources/main"), tempDir)
+        FileUtils.copyFile(new File(root, "build/tmp/jar/MANIFEST.MF"), new File(tempDir, "META-INF/MANIFEST.MF"))
+        copy(new File(root, "src/main/java"), tempDir)
+
+        try(ZipOutputStream os = new ZipOutputStream(new FileOutputStream(sourceJar))) {
+            for (File f : tempDir.listFiles()) {
+                zip(os, f)
+            }
+        }
+    }
+}
+
+static void copy(File src, File to) {
+    for (File c : src.listFiles()) {
+        if (c.isFile()) {
+            FileUtils.copyFile(c, new File(to, c.getName()))
+        }else {
+            copy(c, new File(to, c.getName()))
+        }
+    }
+}
+static void zip(ZipOutputStream os, File f) {
+    if (f.isFile()) {
+        String s = f.toString().replace('\\', '/')
+        os.putNextEntry(new ZipEntry(s.substring(s.indexOf("/build/tmp/source/") + "/build/tmp/source/".length())))
+        os.write(f.bytes)
+        os.closeEntry()
+    }else {
+        for (File f1 : f.listFiles()) {
+            zip(os, f1)
+        }
+    }
 }
 
 publishing {
