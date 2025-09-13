@@ -1,1 +1,1 @@
-* [开始](/version/1.20.1/start.md)
+* [开始](/version/1.18.2/start.md)
